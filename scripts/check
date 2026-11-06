@@ -1,0 +1,61 @@
+#!/bin/sh
+set -eu
+lane=${1:-fast}
+if [ "$#" -gt 1 ]; then echo "usage: scripts/check [fast|full]" >&2; exit 2; fi
+case "$lane" in fast|full) ;; *) echo "usage: scripts/check [fast|full]" >&2; exit 2;; esac
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+. "$repo_root/scripts/go-env"
+cd "$repo_root"
+"$go_bin" mod verify
+export BRAIN_CHECK_LANE="$lane"
+trap 'code=$?; if [ "$code" != 0 ]; then echo "check $lane: exit $code"; fi' 0
+mkdir -p .local/bin
+CGO_ENABLED=0 "$go_bin" build -trimpath -buildvcs=false -o ".local/bin/brain$exe_suffix" ./cmd/brain
+unformatted=$("$gofmt_bin" -l cmd internal tests/testutil scripts/release scripts/packagecmd scripts/verifyrun scripts/verifycmd scripts/verifybootstrap scripts/evaluaterun scripts/evaluatecmd scripts/installrun scripts/installcmd)
+if [ -n "$unformatted" ]; then echo "gofmt required:" >&2; echo "$unformatted" >&2; exit 1; fi
+strays=$(find cmd internal -type f \( -name '*.test' -o -name '*.pyc' -o -name '*.exe' -o -name '*.out' \))
+if [ -n "$strays" ]; then echo "stray build output:" >&2; echo "$strays" >&2; exit 1; fi
+"$go_bin" vet ./...
+CGO_ENABLED=0 GOOS=windows GOARCH=amd64 "$go_bin" vet ./...
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 "$go_bin" vet ./...
+if [ "$lane" = full ]; then
+  # Run package tests one at a time so other package tests do not distort the
+  # 10,000-file indexing time measured inside TestScaleTenX.
+  "$go_bin" test -p=1 -v -count=1 ./...
+else
+  "$go_bin" test -v -count=1 ./...
+fi
+scripts/generate-skill --check
+dependencies=$("$go_bin" list -deps ./cmd/brain)
+if printf '%s\n' "$dependencies" | awk '$0 == "net/http" || $0 == "crypto/tls" { found=1 } END { exit !found }'; then
+  echo "runtime imports net/http or crypto/tls; the no-network contract needs review" >&2
+  exit 1
+fi
+if [ "$lane" = full ]; then
+  export BRAIN_SCALE_ONCE=completed
+  export BRAIN_PORTABLE_ONCE=completed
+  for pure in chunk query convert; do
+    if [ -d "internal/$pure" ]; then "$go_bin" test -count=20 "./internal/$pure"; fi
+  done
+  "$go_bin" test -race -count=1 ./...
+  "$go_bin" test -count=1 -covermode=atomic -coverprofile=.local/coverage.out ./...
+  "$go_bin" tool cover -func=.local/coverage.out
+  awk '
+    NR == 1 { next }
+    /\/cmd\/brain\/main.go:/ { next }
+    /\/scripts\/packagecmd\/main.go:/ { next }
+    /\/scripts\/installcmd\/main.go:/ { next }
+    /\/scripts\/verifycmd\/main.go:/ { next }
+    /\/scripts\/evaluatecmd\/main.go:/ { next }
+    { split($1, path, ":"); total[path[1]] += $2; if ($3 > 0) covered[path[1]] += $2 }
+    END {
+      for (file in total) {
+        minimum = file ~ /\/internal\/(chunk|query|convert)\// ? 95 : 75
+        percent = 100 * covered[file] / total[file]
+        printf "%s: %.1f percent, minimum %d percent\n", file, percent, minimum
+        if (percent < minimum) failed=1
+      }
+      exit failed
+    }' .local/coverage.out
+fi
+echo "check $lane: exit 0"

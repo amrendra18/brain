@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eu
+if [ "$#" != 2 ]; then echo 'usage: scripts/check-skill BINARY SKILL' >&2; exit 2; fi
+temporary=$(mktemp "${TMPDIR:-/tmp}/brain-skill.XXXXXX")
+trap 'rm -f "$temporary"' 0
+"$1" help --skill > "$temporary"
+if ! cmp -s "$2" "$temporary"; then
+  echo 'skill drift: run scripts/generate-skill' >&2
+  exit 1
+fi
+echo 'skill: matches help'

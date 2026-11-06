@@ -1,0 +1,167 @@
+{
+  "about": "Synthetic questions about the checked-in sample projects. A hit is any owner among the first three distinct files.",
+  "exclude": [],
+  "floor": 20,
+  "entries": [
+    {
+      "set": "original",
+      "question": "How does the atlas valve work?",
+      "query": "atlas valve amber",
+      "owners": [
+        "atlas/valve.md"
+      ]
+    },
+    {
+      "set": "original",
+      "question": "How does the atlas sensor work?",
+      "query": "atlas sensor cobalt",
+      "owners": [
+        "atlas/sensor.md"
+      ]
+    },
+    {
+      "set": "original",
+      "question": "How does the atlas filter work?",
+      "query": "atlas filter copper",
+      "owners": [
+        "atlas/filter.md"
+      ]
+    },
+    {
+      "set": "original",
+      "question": "How does the atlas battery work?",
+      "query": "atlas battery maple",
+      "owners": [
+        "atlas/battery.md"
+      ]
+    },
+    {
+      "set": "original",
+      "question": "How does the atlas alarm work?",
+      "query": "atlas alarm violet",
+      "owners": [
+        "atlas/alarm.md"
+      ]
+    },
+    {
+      "set": "original",
+      "question": "How does the atlas meter work?",
+      "query": "atlas meter silver",
+      "owners": [
+        "atlas/meter.md"
+      ]
+    },
+    {
+      "set": "original",
+      "question": "How does the atlas pump work?",
+      "query": "atlas pump cedar",
+      "owners": [
+        "atlas/pump.md"
+      ]
+    },
+    {
+      "set": "original",
+      "question": "How does the harbor dock work?",
+      "query": "harbor dock north",
+      "owners": [
+        "harbor/dock.md"
+      ]
+    },
+    {
+      "set": "original",
+      "question": "How does the harbor beacon work?",
+      "query": "harbor beacon orange",
+      "owners": [
+        "harbor/beacon.md"
+      ]
+    },
+    {
+      "set": "original",
+      "question": "How does the harbor crane work?",
+      "query": "harbor crane blue",
+      "owners": [
+        "harbor/crane.md"
+      ]
+    },
+    {
+      "set": "original",
+      "question": "How does the harbor gate work?",
+      "query": "harbor gate iron",
+      "owners": [
+        "harbor/gate.md"
+      ]
+    },
+    {
+      "set": "original",
+      "question": "How does the harbor radio work?",
+      "query": "harbor radio green",
+      "owners": [
+        "harbor/radio.md"
+      ]
+    },
+    {
+      "set": "original",
+      "question": "How does the harbor tide work?",
+      "query": "harbor tide stone",
+      "owners": [
+        "harbor/tide.md"
+      ]
+    },
+    {
+      "set": "original",
+      "question": "How does the harbor rope work?",
+      "query": "harbor rope red",
+      "owners": [
+        "harbor/rope.md"
+      ]
+    },
+    {
+      "set": "original",
+      "question": "How does the orchard irrigation work?",
+      "query": "orchard irrigation west",
+      "owners": [
+        "orchard/irrigation.md"
+      ]
+    },
+    {
+      "set": "original",
+      "question": "How does the orchard harvest work?",
+      "query": "orchard harvest autumn",
+      "owners": [
+        "orchard/harvest.md"
+      ]
+    },
+    {
+      "set": "original",
+      "question": "How does the orchard ladder work?",
+      "query": "orchard ladder yellow",
+      "owners": [
+        "orchard/ladder.md"
+      ]
+    },
+    {
+      "set": "original",
+      "question": "How does the orchard soil work?",
+      "query": "orchard soil dark",
+      "owners": [
+        "orchard/soil.md"
+      ]
+    },
+    {
+      "set": "original",
+      "question": "How does the orchard shed work?",
+      "query": "orchard shed white",
+      "owners": [
+        "orchard/shed.md"
+      ]
+    },
+    {
+      "set": "original",
+      "question": "How does the orchard compost work?",
+      "query": "orchard compost leaf",
+      "owners": [
+        "orchard/compost.md"
+      ]
+    }
+  ]
+}

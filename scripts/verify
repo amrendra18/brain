@@ -1,0 +1,35 @@
+#!/bin/sh
+set -eu
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+if ! (. "$repo_root/scripts/go-env") >/dev/null; then
+  echo 'Environment unready: Go 1.27.1 selection failed.' >&2
+  exit 3
+fi
+. "$repo_root/scripts/go-env"
+cd "$repo_root"
+tool_dir=$(mktemp -d "${TMPDIR:-/tmp}/brain-verify-tool.XXXXXX")
+trap 'rm -rf "$tool_dir"' 0
+trap 'exit 1' HUP INT TERM
+native_tool="$tool_dir"
+if [ "$exe_suffix" = .exe ]; then native_tool=$(cygpath -m "$tool_dir"); fi
+if [ -L scripts/verifybootstrap/main.go ] || [ ! -f scripts/verifybootstrap/main.go ]; then
+  echo 'Environment unready: trusted verifier preflight source is not a regular file.' >&2
+  exit 3
+fi
+if ! GO111MODULE=off GOFLAGS= "$go_bin" build -trimpath -buildvcs=false -o "$native_tool/preflight$exe_suffix" ./scripts/verifybootstrap/main.go; then
+  echo 'Environment unready: verifier preflight could not build.' >&2
+  exit 3
+fi
+if ! "$tool_dir/preflight$exe_suffix" "$repo_root"; then
+  exit 3
+fi
+if ! "$go_bin" mod verify >/dev/null 2>&1; then
+  echo 'Environment unready: pinned module cache failed verification.' >&2
+  exit 3
+fi
+if ! "$go_bin" build -trimpath -buildvcs=false -o "$native_tool/verify$exe_suffix" ./scripts/verifycmd; then
+  echo 'Environment unready: verification driver could not build.' >&2
+  exit 3
+fi
+if "$tool_dir/verify$exe_suffix" "$@"; then result=0; else result=$?; fi
+exit "$result"

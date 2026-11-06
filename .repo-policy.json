@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "public_github_owner_urls": true,
+  "public_emails": ["noreply@anthropic.com"],
+  "private_literal_exceptions": [
+    {
+      "path": "LICENSE",
+      "line": 3,
+      "sha256": "f1e65c615b01d1403d547c9857290b6138ba2bd6de900087a39fd61ea2c4a99a",
+      "reason": "copyright holder"
+    }
+  ]
+}

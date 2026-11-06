@@ -1,0 +1,23 @@
+#!/bin/sh
+set -eu
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+. "$repo_root/scripts/go-env"
+cd "$repo_root"
+mkdir -p .local/bin
+case "${1:-}" in ''|all) ;; *) echo 'usage: scripts/build [all]' >&2; exit 2;; esac
+if [ "$#" -gt 1 ]; then echo 'usage: scripts/build [all]' >&2; exit 2; fi
+vcs=auto
+if ! git rev-parse --verify HEAD >/dev/null 2>&1; then vcs=false; fi
+if [ "${1:-}" = all ]; then
+  for target in darwin/arm64 darwin/amd64 windows/amd64 linux/amd64 linux/arm64; do
+    system=${target%/*}; architecture=${target#*/}
+    folder=".local/build/$system-$architecture"
+    mkdir -p "$folder"
+    suffix=''; if [ "$system" = windows ]; then suffix=.exe; fi
+    CGO_ENABLED=0 GOOS="$system" GOARCH="$architecture" "$go_bin" build -trimpath -buildvcs="$vcs" -o "$folder/brain$suffix" ./cmd/brain
+    echo "built $folder/brain$suffix"
+  done
+  exit 0
+fi
+CGO_ENABLED=0 "$go_bin" build -trimpath -buildvcs="$vcs" -o ".local/bin/brain$exe_suffix" ./cmd/brain
+echo "built .local/bin/brain$exe_suffix"

@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eu
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+. "$repo_root/scripts/go-env"
+case "${1:-}" in ''|--check) ;; *) echo 'usage: scripts/generate-skill [--check]' >&2; exit 2;; esac
+if [ "$#" -gt 1 ]; then echo 'usage: scripts/generate-skill [--check]' >&2; exit 2; fi
+"$repo_root/scripts/build" >/dev/null
+if [ "${1:-}" = --check ]; then
+  exec "$repo_root/scripts/check-skill" "$repo_root/.local/bin/brain$exe_suffix" "$repo_root/skills/brain/SKILL.md"
+fi
+"$repo_root/.local/bin/brain$exe_suffix" help --skill > "$repo_root/skills/brain/SKILL.md"

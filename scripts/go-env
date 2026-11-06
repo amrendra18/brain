@@ -1,0 +1,73 @@
+#!/bin/sh
+# The caller sets repo_root before loading this file. One ignored file selects
+# a compiler for this checkout; otherwise the installed go on PATH is used.
+export GOENV=off GOTOOLCHAIN=local GOWORK=off
+unset GOROOT
+selection_home="$repo_root/.local/go-home"
+mkdir -p "$selection_home"
+go_selection="$repo_root/.local/go-root"
+if [ -e "$go_selection" ] || [ -L "$go_selection" ]; then
+  if [ ! -f "$go_selection" ] || [ -L "$go_selection" ]; then
+    echo '.local/go-root must be a regular file' >&2
+    exit 1
+  fi
+  go_root=$(cat "$go_selection")
+  case "$go_root" in
+    /*) ;;
+    *) echo '.local/go-root must contain one absolute Go installation folder' >&2; exit 1;;
+  esac
+  go_bin="$go_root/bin/go"
+  if command -v cygpath >/dev/null 2>&1 && [ -x "$go_bin.exe" ]; then go_bin="$go_bin.exe"; fi
+else
+  go_bin=$(command -v go || true)
+  if [ -z "$go_bin" ]; then
+    echo 'Go 1.27.1 is required on PATH; see README Requirements' >&2
+    exit 1
+  fi
+  case "$go_bin" in
+    /*) ;;
+    *) go_bin="$(CDPATH= cd -- "$(dirname -- "$go_bin")" && pwd)/$(basename -- "$go_bin")";;
+  esac
+  if command -v cygpath >/dev/null 2>&1 && [ -x "$go_bin.exe" ]; then go_bin="$go_bin.exe"; fi
+  go_root=$(HOME="$selection_home" USERPROFILE="$selection_home" APPDATA="$selection_home" "$go_bin" env GOROOT)
+  if command -v cygpath >/dev/null 2>&1; then go_root=$(cygpath -u "$go_root"); fi
+fi
+exe_suffix=''
+case "$go_bin" in *.exe) exe_suffix=.exe;; esac
+gofmt_bin="$go_root/bin/gofmt$exe_suffix"
+if [ ! -x "$go_bin" ] || [ ! -x "$gofmt_bin" ]; then
+  echo 'selected Go installation needs bin/go and bin/gofmt; see README Requirements' >&2
+  exit 1
+fi
+native_root="$repo_root"
+native_go_root="$go_root"
+BRAIN_GO_BIN="$go_bin"
+if [ "$exe_suffix" = .exe ]; then
+  native_root=$(cygpath -m "$repo_root")
+  native_go_root=$(cygpath -m "$go_root")
+  BRAIN_GO_BIN=$(cygpath -m "$go_bin")
+fi
+GOROOT="$native_go_root"
+export GOROOT BRAIN_GO_BIN
+case "$(HOME="$selection_home" USERPROFILE="$selection_home" APPDATA="$selection_home" "$go_bin" version)" in
+  "go version go1.27.1 "*) ;;
+  *) echo 'selected Go installation must be Go 1.27.1; see README Requirements' >&2; exit 1;;
+esac
+if [ -z "${GOCACHE:-}" ]; then
+  mkdir -p "$repo_root/.local/go-build-cache"
+  GOCACHE="$native_root/.local/go-build-cache"
+fi
+export GOCACHE
+if [ -z "${GOMODCACHE:-}" ]; then
+  module_cache="${XDG_CACHE_HOME:-$HOME/.cache}/brain/go-mod-cache"
+  mkdir -p "$module_cache"
+  if [ "$exe_suffix" = .exe ]; then module_cache=$(cygpath -m "$module_cache"); fi
+  GOMODCACHE="$module_cache"
+fi
+export GOMODCACHE
+if [ -z "${GOPATH:-}" ]; then
+  mkdir -p "$repo_root/.local/go-path"
+  GOPATH="$native_root/.local/go-path"
+fi
+export GOPATH
+export GOFLAGS='-mod=readonly'

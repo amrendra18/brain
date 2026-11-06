@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+if [ "$#" != 1 ]; then echo 'usage: scripts/prepare-ci --verify' >&2; exit 2; fi
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+case "${1:-}" in
+  --verify) ;;
+  *) echo 'usage: scripts/prepare-ci --verify' >&2; exit 2;;
+esac
+. "$repo_root/scripts/go-env"
+host=$("$go_bin" env GOHOSTOS)/$("$go_bin" env GOHOSTARCH)
+if [ "$("$go_bin" version)" != "go version go1.27.1 $host" ]; then echo 'pinned CI Go has the wrong version' >&2; exit 1; fi
+if [ -n "${BRAIN_EXPECT_TARGET:-}" ] && [ "$host" != "$BRAIN_EXPECT_TARGET" ]; then echo 'runner does not match its declared target' >&2; exit 1; fi
+echo "CI pinned Go 1.27.1: $host"

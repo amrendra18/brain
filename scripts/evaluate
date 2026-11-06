@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+. "$repo_root/scripts/go-env"
+tool_dir=$(mktemp -d "${TMPDIR:-/tmp}/brain-evaluate-tool.XXXXXX")
+trap 'rm -rf "$tool_dir"' 0
+trap 'exit 1' HUP INT TERM
+native_tool="$tool_dir"
+if [ "$exe_suffix" = .exe ]; then native_tool=$(cygpath -m "$tool_dir"); fi
+cd "$repo_root"
+"$go_bin" build -trimpath -buildvcs=false -o "$native_tool/evaluate$exe_suffix" ./scripts/evaluatecmd
+"$tool_dir/evaluate$exe_suffix" "$@"

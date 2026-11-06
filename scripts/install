@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eu
+case "${1:-}" in --help|-h)
+  echo 'usage: scripts/install [--source DIR ...] [--skills codex,claude|none] [--state-dir DIR] [--config FILE] [--bin-dir DIR] [--time HH:MM] [--no-schedule] [--write]'
+  echo 'Without --write, preview only. Builds use the checkout .local folder. First install requires --source.'
+  exit 0;;
+esac
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+. "$repo_root/scripts/go-env"
+cd "$repo_root"
+exec "$go_bin" run ./scripts/installcmd "$@"
